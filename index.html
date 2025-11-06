@@ -16,6 +16,11 @@
     --shadow-sm: 0 8px 24px rgba(3,12,30,0.08);
   }
   html.dark{ --bg:#071225; --card:#071827; --muted:#98a7bf; --text:#e9f1ff; --accent-start:#5ab3ff; --accent-end:#6b7dff; --glass: rgba(255,255,255,0.02); }
+
+  /* ADDED: ocean & sunset theme overrides so they actually work */
+  html.ocean{ --bg:#e8f7fb; --card:#ffffff; --muted:#4f6b75; --text:#063242; --accent-start:#00c2d1; --accent-end:#2b9fff; --glass: rgba(6,50,66,0.03); }
+  html.sunset{ --bg:#fff6f8; --card:#ffffff; --muted:#7a6b77; --text:#2a1020; --accent-start:#ff7aa2; --accent-end:#ffb86b; --glass: rgba(42,16,32,0.03); }
+
   *{box-sizing:border-box}
   body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var(--text);background:linear-gradient(180deg,var(--bg),#e9f6ff);-webkit-font-smoothing:antialiased}
   .container{max-width:1100px;margin:14px auto;padding:14px}
