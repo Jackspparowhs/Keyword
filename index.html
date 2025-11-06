@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hashtag Generator — PirateRuler</title>
+<meta name="description" content="Hashtag & keyword generator by PirateRuler — client-side, no API. Generate hashtags, keyword variations, emoji tags, combos & export." />
+<meta name="theme-color" content="#f7fbff" />
+<link rel="icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect rx="14" width="64" height="64" fill="%236b7dff"/><text x="50%" y="50%" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="26" text-anchor="middle" alignment-baseline="central" fill="white">PR</text></svg>'>
+<style>
+  /* Styles kept consistent with your calculator template (trimmed & adapted) */
+  :root{
+    --bg:#f3f7fb; --card:#ffffff; --muted:#6b7480; --text:#0b2130;
+    --accent-start:#6b7dff; --accent-end:#0bb3ff;
+    --glass: rgba(11,17,28,0.04);
+    --radius:14px; --shadow-lg: 0 18px 50px rgba(3,12,30,0.18);
+    --shadow-sm: 0 8px 24px rgba(3,12,30,0.08);
+  }
+  html.dark{ --bg:#071225; --card:#061028; --muted:#98a7bf; --text:#e9f1ff; --accent-start:#5ab3ff; --accent-end:#6b7dff; }
+  html.ocean{ --bg:#e8f7fb; --card:#fff; --muted:#4f6b75; --text:#063242; --accent-start:#00c2d1; --accent-end:#2b9fff; }
+  html.sunset{ --bg:#fff6f8; --card:#fff; --muted:#7a6b77; --text:#2a1020; --accent-start:#ff7aa2; --accent-end:#ffb86b; }
+
+  *{box-sizing:border-box}
+  body{background:linear-gradient(180deg,var(--bg), #e9f6ff); font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; color:var(--text); margin:0; -webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .container{max-width:1280px;margin:14px auto;padding:18px;}
+
+  /* header */
+  header.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:14px;background:linear-gradient(90deg, rgba(107,125,255,0.06), rgba(11,179,255,0.02));box-shadow:var(--shadow-sm)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,var(--accent-start),var(--accent-end));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px}
+  .brand-title .title-strong{font-size:22px;font-weight:900}
+  .brand-title .by{font-size:12px;color:var(--muted);margin-top:3px}
+  .header-actions{display:flex;gap:10px;align-items:center}
+  .btn{padding:9px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+  .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+  .btn.theme{background:linear-gradient(90deg,var(--accent-start),var(--accent-end));color:white}
+  .hamb{width:46px;height:46px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(0,0,0,0.04)}
+
+  /* sidebar */
+  .sidebar { position:fixed; top:0; right:0; height:100vh; width:360px; max-width:94vw; transform:translateX(120%); transition:transform .28s cubic-bezier(.2,.9,.3,1); z-index:90; background:var(--card); box-shadow: -40px 0 80px rgba(2,8,20,0.25); padding:20px; border-left:1px solid rgba(0,0,0,0.04); overflow:auto; border-radius:0 0 0 14px; }
+  .sidebar.open{ transform:translateX(0); }
+  .nav-list{margin-top:10px; display:flex; flex-direction:column; gap:12px}
+  .nav-list a{display:block;padding:14px;border-radius:10px;background:linear-gradient(180deg, rgba(0,0,0,0.01), rgba(0,0,0,0.02)); color:var(--text); font-weight:600}
+
+  /* hero/generator area */
+  .hero{margin-top:18px;padding:18px;border-radius:16px;background:var(--card);box-shadow:var(--shadow-lg)}
+  .hero .big{font-size:28px;font-weight:900;margin:0;text-align:center}
+  .hero .small{color:var(--muted);margin-top:8px;text-align:center}
+
+  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .input{flex:1;min-width:200px}
+  input[type="text"], input[type="number"], select{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-size:15px;background:transparent;color:var(--text)}
+  .primary{background:linear-gradient(90deg,var(--accent-start),var(--accent-end));color:white;padding:10px 16px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+  .small-actions{display:flex;gap:8px;align-items:center}
+
+  /* main layout */
+  .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:12px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);border:1px solid rgba(0,0,0,0.04)}
+  .hint{color:var(--muted);font-size:13px;margin-bottom:8px}
+  .cat-title{font-weight:900;margin-top:4px;margin-bottom:8px}
+
+  /* results */
+  .results{margin-top:12px}
+  .cat-block{margin-bottom:14px}
+  .tag-row{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.6), transparent);margin-bottom:8px}
+  .tag-left{display:flex;flex-direction:column;min-width:0}
+  .tag-text{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag-sub{color:var(--muted);font-size:13px;margin-top:6px}
+  .tag-actions{display:flex;gap:8px;flex-shrink:0}
+  .btn.copy{padding:8px 12px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);cursor:pointer;font-weight:700}
+  .btn.use{padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.04);cursor:pointer;font-weight:700}
+  .load-more{display:block;margin:8px auto;padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;font-weight:800}
+
+  /* right panel */
+  .feature-panel{background:var(--card);border:1px solid rgba(0,0,0,0.06);border-radius:14px;box-shadow:var(--shadow-sm);padding:12px}
+  .panel-title{font-weight:900;margin-bottom:12px}
+  .muted{color:var(--muted)}
+
+  footer{margin-top:16px;padding:16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.96));text-align:center;box-shadow:var(--shadow-lg)}
+  .visit{padding:12px 20px;border-radius:999px;display:inline-block;background:linear-gradient(90deg,#ff7aa2 0%, #6b7dff 100%);color:white;font-weight:800;text-decoration:none}
+
+  @media(max-width:520px){ .controls{flex-direction:column;align-items:stretch} .tag-row{flex-direction:column;align-items:flex-start} .tag-actions{width:100%;justify-content:space-between;margin-top:8px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="brand">
+      <a href="/" aria-label="Home" style="display:flex;align-items:center;gap:12px">
+        <div class="logo" aria-hidden="true">PR</div>
+        <div class="brand-title">
+          <div class="title-strong">Hashtag Generator</div>
+          <div class="by">by PirateRuler.com</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="header-actions" role="navigation">
+      <div class="theme-select" id="themeSelectWrap">
+        <button id="themeBtn" class="btn theme" title="Theme">Ocean</button>
+        <div id="themeList" class="theme-list" aria-hidden="true">
+          <div class="theme-item" data-theme="light">Light</div>
+          <div class="theme-item" data-theme="dark">Dark</div>
+          <div class="theme-item" data-theme="ocean">Ocean</div>
+          <div class="theme-item" data-theme="sunset">Sunset</div>
+        </div>
+      </div>
+      <div id="hambBtn" class="hamb" title="Open menu" aria-haspopup="true" aria-controls="sidebar">☰</div>
+    </div>
+  </header>
+
+  <!-- Generator hero -->
+  <section class="hero" aria-labelledby="heroTitle">
+    <h1 id="heroTitle" class="big">Hashtag & Keyword Generator</h1>
+    <p class="small">Create hashtags and search keyword variants from your input. Client-side only — no API.</p>
+
+    <div class="controls" role="region" aria-label="Generator controls">
+      <div style="flex:1;min-width:220px">
+        <label class="muted">Seed words / phrase</label>
+        <input id="seedInput" type="text" placeholder="e.g. travel food summer" value="PirateRuler" />
+      </div>
+
+      <div style="width:150px">
+        <label class="muted">How many (max 10000)</label>
+        <input id="countInput" type="number" min="1" max="10000" value="100" />
+      </div>
+
+      <div style="width:180px">
+        <label class="muted">Category (optional)</label>
+        <select id="categorySelect">
+          <option value="all">All</option>
+          <option value="basic">Basic</option>
+          <option value="trending">Trending</option>
+          <option value="emoji">Emoji</option>
+          <option value="numbers">Numbers</option>
+          <option value="combo">Combos</option>
+          <option value="location">Location</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="muted">&nbsp;</label>
+        <button id="generateBtn" class="primary" title="Generate tags">Generate</button>
+      </div>
+
+      <div class="small-actions">
+        <button id="copyAllBtn" class="btn ghost" title="Copy all visible">Copy All</button>
+        <button id="downloadBtn" class="btn ghost" title="Download .txt">Download .txt</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main grid -->
+  <main class="grid" role="main">
+    <!-- left: results & options -->
+    <div>
+      <div class="card">
+        <div class="hint">Results grouped by category. Click <strong>Copy</strong> to copy a tag, or <strong>Use</strong> to replace the seed field with that tag. Use "Load more" if a category is long.</div>
+
+        <div id="results" class="results" aria-live="polite"></div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="card">
+        <h3 class="cat-title">How to use</h3>
+        <ol style="margin:0 0 0 18px;padding:0" class="muted">
+          <li>Enter one or multiple seed words (space-separated).</li>
+          <li>Choose count & optional category then click <strong>Generate</strong>.</li>
+          <li>Click <strong>Copy</strong> to copy a tag, or <strong>Use</strong> to paste into seed.</li>
+          <li>Download .txt to save all generated tags. For very large counts, use desktop for speed.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- right: feature panel -->
+    <aside>
+      <div class="feature-panel">
+        <div class="panel-title">Why this generator?</div>
+        <p class="muted">No API. All generation and exporting happens in your browser. Mix and match categories, add emoji or numbers, create combos, and export results for social posts or SEO lists.</p>
+        <div style="height:12px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.96), transparent)">
+            <div style="font-weight:800">Categories</div>
+            <div class="muted" style="margin-top:6px">Basic, Trending, Emoji, Numbers, Combos, Location</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.96), transparent)">
+            <div style="font-weight:800">Export</div>
+            <div class="muted" style="margin-top:6px">Copy single, Copy All or Download .txt</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.96), transparent)">
+            <div style="font-weight:800">Load more</div>
+            <div class="muted" style="margin-top:6px">Each category shows first 50 items — use Load more to reveal rest.</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.96), transparent)">
+            <div style="font-weight:800">Limits</div>
+            <div class="muted" style="margin-top:6px">You can request up to 10,000 tags. Very large lists may be slow on mobile.</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div style="padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.96), transparent)">
+          <div style="font-weight:800">Quick links</div>
+          <div style="margin-top:8px" class="muted">
+            <a href="/post/about.html" target="_blank">About — PirateRuler</a><br>
+            <a href="/post/privacy.html" target="_blank">Privacy Policy</a>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+  </main>
+
+  <!-- footer -->
+  <footer>
+    <div style="margin-bottom:8px">Hashtag generator by PirateRuler — generate tag lists fast and privately in your browser.</div>
+    <a class="visit" href="https://pirateruler.com" target="_blank" rel="noopener noreferrer">Visit PirateRuler.com</a>
+    <div style="height:8px"></div>
+    <small class="muted">© <span id="year"></span> PirateRuler — Backup & resources: pirateruler.com</small>
+  </footer>
+</div>
+
+<!-- sidebar panel (same as calculator) -->
+<aside id="sidebar" class="sidebar" role="dialog" aria-modal="true" aria-hidden="true">
+  <div style="display:flex;justify-content:flex-end"><button id="closeSidebar" class="btn ghost">Close</button></div>
+  <h3>PirateRuler Links</h3>
+  <p class="muted">Quick links & backup resources</p>
+  <nav class="nav-list" aria-label="PirateRuler quick links">
+    <a href="https://www.pirateruler.com/post/about.html" target="_blank" rel="noopener noreferrer">About — PirateRuler</a>
+    <a href="https://www.pirateruler.com/post/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+    <a href="https://www.pirateruler.com/post/contact.html" target="_blank" rel="noopener noreferrer">Contact</a>
+    <a href="https://www.pirateruler.com/post/terms.html" target="_blank" rel="noopener noreferrer">Terms & Service</a>
+  </nav>
+  <div style="margin-top:18px;color:var(--muted);font-size:13px">
+    If this site is offline you can visit PirateRuler for backups & resources:<br>
+    <a href="https://pirateruler.com" target="_blank" rel="noopener noreferrer">pirateruler.com</a>
+  </div>
+</aside>
+
+<script>
+/* Hashtag Generator — client-side */
+/* Utilities */
+const $ = id => document.getElementById(id);
+const yearEl = $('year'); yearEl.textContent = new Date().getFullYear();
+
+function copyText(txt){
+  if(!navigator.clipboard) {
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e){ console.warn(e); } ta.remove(); return Promise.resolve();
+  }
+  return navigator.clipboard.writeText(txt);
+}
+function downloadText(filename, text){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'})); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+}
+function showToast(msg){
+  const t = document.createElement('div'); t.textContent = msg;
+  Object.assign(t.style,{position:'fixed',bottom:'18px',left:'50%',transform:'translateX(-50%)',padding:'8px 12px',borderRadius:'10px',background:'rgba(0,0,0,0.75)',color:'#fff',zIndex:9999});
+  document.body.appendChild(t); setTimeout(()=> t.remove(), 900);
+}
+
+/* Small seeded RNG so results are repeatable */
+function createRng(seed){
+  let s = 0;
+  for(let i=0;i<seed.length;i++) s = (s<<5) - s + seed.charCodeAt(i);
+  return function(){
+    s = Math.imul(48271, s) % 2147483647;
+    return (s & 0x7fffffff) / 2147483647;
+  };
+}
+
+/* Normalization helpers */
+function sanitizeSeed(s){
+  return s.trim().replace(/\s+/g,' ').replace(/[^\w\s\-]/g,'').trim();
+}
+function wordsFromSeed(seed){
+  return sanitizeSeed(seed).split(' ').filter(Boolean);
+}
+
+/* Variants generators (category functions) */
+/* Each generator accepts array of words and yields strings (without #) */
+function basicVariants(words){
+  // plain, lowercase, uppercase, camelcase, underscored, joined
+  const joined = words.join('');
+  const spaced = words.join('');
+  const lower = words.join('').toLowerCase();
+  const upper = words.join('').toUpperCase();
+  const underscore = words.join('_');
+  const dash = words.join('-');
+  const camel = words.map((w,i)=> i? (w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()) : w.toLowerCase()).join('');
+  return [joined, lower, upper, underscore, dash, camel];
+}
+function trendingVariants(words){
+  // add popular suffixes/prefixes
+  const base = words.join('');
+  const suffixes = ['official','vibes','life','daily','tales','blog','world','style','travel','food'];
+  const prefixes = ['the','my','its','go','letstravel','get','live'];
+  const out = [];
+  suffixes.forEach(s => out.push(base + s));
+  prefixes.forEach(p => out.push(p + base));
+  out.push(base+'2025', base+'2024', base+'now');
+  return out;
+}
+function emojiVariants(words){
+  const emojis = ['🔥','✨','❤️','👍','🌟','🍕','🌍','📸','🎉','🏝️'];
+  const base = words.join('');
+  const out = [];
+  emojis.forEach(e => out.push(base + e));
+  emojis.forEach(e => out.push(e + base));
+  return out;
+}
+function numberVariants(words){
+  const base = words.join('');
+  const out = [];
+  // append common numbers and random small numbers
+  [1,2,3,10,11,21,99,100,2024,2025].forEach(n => out.push(base + n));
+  for(let i=0;i<5;i++) out.push(base + Math.floor(Math.random()*999));
+  return out;
+}
+function comboVariants(words){
+  const out = [];
+  // combine seeds in permutations + popular words
+  const popular = ['travel','food','style','tech','life','music','art','marketing','seo','design'];
+  for(let i=0;i<words.length;i++){
+    for(let j=0;j<words.length;j++){
+      if(i===j) continue;
+      out.push(words[i]+words[j]);
+    }
+  }
+  // combine with popular
+  popular.slice(0,8).forEach(p => out.push(words.join('') + p));
+  popular.slice(0,8).forEach(p => out.push(p + words.join('')));
+  return out;
+}
+function locationVariants(words){
+  const places = ['india','usa','uk','europe','asia','dubai','nyc','la','tokyo','paris'];
+  const base = words.join('');
+  const out = [];
+  places.forEach(p => { out.push(base + p); out.push(p + base); });
+  return out;
+}
+
+/* Master list of category handlers */
+const CATEGORY_HANDLERS = {
+  basic: basicVariants,
+  trending: trendingVariants,
+  emoji: emojiVariants,
+  numbers: numberVariants,
+  combo: comboVariants,
+  location: locationVariants
+};
+
+/* Build final tag (prefix '#' and optionally camel-case) */
+function toTag(s){
+  if(!s) return '';
+  // remove leading non-alphanum, replace spaces
+  s = s.toString();
+  s = s.replace(/\s+/g, '').replace(/[^\p{L}\p{N}_\-]/gu,'');
+  if(!s) return '';
+  return '#' + s;
+}
+
+/* Generate tags up to count using provided categories and seeds */
+function generateTags(seedText, count=100, category='all'){
+  const words = wordsFromSeed(seedText);
+  if(!words.length) return [];
+
+  const rng = createRng(seedText + '|' + count + '|' + category);
+  const results = new Set();
+
+  // order of categories to attempt — basic first
+  const categories = (category === 'all') ? ['basic','trending','combo','emoji','numbers','location'] : [category];
+
+  // base pool
+  let attempts = 0;
+  while(results.size < count && attempts < count * 40){
+    for(const cat of categories){
+      if(results.size >= count) break;
+      const handler = CATEGORY_HANDLERS[cat];
+      let candidates = [];
+      if(handler) candidates = handler(words);
+      else candidates = basicVariants(words);
+
+      // shuffle-ish pick
+      const idx = Math.floor(rng() * candidates.length);
+      let candidate = candidates[idx] || candidates[0] || words.join('');
+      // small random mutations
+      if(rng() < 0.12) candidate = candidate + (Math.floor(rng()*9999));
+      if(rng() < 0.08) candidate = candidate + String.fromCharCode(97 + Math.floor(rng()*26));
+      // fallback ensure not empty
+      candidate = candidate || words.join('');
+      results.add(candidate);
+    }
+    attempts++;
+    // break safe if categories empty
+    if(categories.length === 0) break;
+  }
+
+  // If still short, generate permutations systematically
+  if(results.size < count){
+    const base = words.join('');
+    for(let i=0; results.size<count && i<10000; i++){
+      results.add(base + i);
+    }
+  }
+
+  // return array
+  return Array.from(results).slice(0, count);
+}
+
+/* UI rendering logic: group by category and paginate per category (50 shown initially) */
+const resultsContainer = $('results');
+const generateBtn = $('generateBtn');
+const copyAllBtn = $('copyAllBtn');
+const downloadBtn = $('downloadBtn');
+const seedInput = $('seedInput');
+const countInput = $('countInput');
+const categorySelect = $('categorySelect');
+
+function clearResults(){ resultsContainer.innerHTML = ''; }
+function makeTagRow(tag, cat){
+  const row = document.createElement('div'); row.className = 'tag-row';
+  const left = document.createElement('div'); left.className = 'tag-left';
+  const t = document.createElement('div'); t.className = 'tag-text'; t.textContent = toTag(tag);
+  const sub = document.createElement('div'); sub.className = 'tag-sub'; sub.textContent = cat;
+  left.appendChild(t); left.appendChild(sub);
+
+  const actions = document.createElement('div'); actions.className = 'tag-actions';
+  const copyBtn = document.createElement('button'); copyBtn.className = 'btn copy'; copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', async ()=> {
+    try{ await copyText(toTag(tag)); showToast('Copied'); copyBtn.textContent='Copied'; setTimeout(()=>copyBtn.textContent='Copy',900); } catch(e){ alert('Copy failed'); }
+  });
+  const useBtn = document.createElement('button'); useBtn.className = 'btn use'; useBtn.textContent = 'Use';
+  useBtn.addEventListener('click', ()=> { seedInput.value = tag; seedInput.focus(); });
+  actions.appendChild(copyBtn); actions.appendChild(useBtn);
+
+  row.appendChild(left); row.appendChild(actions);
+  return row;
+}
+
+/* Render categories with 'perCategory' shown, rest hidden behind Load more */
+function renderResults(seedText, totalCount, chosenCategory='all', perCategory=50){
+  clearResults();
+  const seeds = wordsFromSeed(seedText);
+  if(!seeds.length){ resultsContainer.innerHTML = '<div class="muted">Enter seed words to generate tags.</div>'; return; }
+
+  // For categories chosen, produce a list per category (but keep deterministic)
+  const cats = (chosenCategory === 'all') ? Object.keys(CATEGORY_HANDLERS) : [chosenCategory];
+  const allGroups = [];
+
+  // We'll distribute requested count evenly across chosen categories
+  const perCatCount = Math.max(1, Math.floor(totalCount / cats.length));
+
+  cats.forEach(cat => {
+    const arr = generateTags(seedText, perCatCount, cat);
+    allGroups.push({ cat, items: arr });
+  });
+
+  // If totalCount > produced, fill from basic fallback
+  const produced = allGroups.reduce((s,g)=> s + g.items.length, 0);
+  if(produced < totalCount){
+    const extra = generateTags(seedText, totalCount - produced, 'basic');
+    if(extra.length) allGroups[0].items.push(...extra);
+  }
+
+  // Render groups
+  allGroups.forEach(group => {
+    const block = document.createElement('div'); block.className = 'cat-block card';
+    const title = document.createElement('div'); title.className='cat-title'; title.textContent = `${group.cat.charAt(0).toUpperCase()+group.cat.slice(1)} (${group.items.length})`;
+    block.appendChild(title);
+
+    const listWrap = document.createElement('div');
+    const show = Math.min(perCategory, group.items.length);
+    for(let i=0;i<show;i++) listWrap.appendChild(makeTagRow(group.items[i], group.cat));
+
+    block.appendChild(listWrap);
+
+    if(group.items.length > perCategory){
+      const loadBtn = document.createElement('button'); loadBtn.className='load-more'; loadBtn.textContent = 'Load more';
+      loadBtn.addEventListener('click', ()=> {
+        for(let i=perCategory;i<group.items.length;i++) listWrap.appendChild(makeTagRow(group.items[i], group.cat));
+        loadBtn.remove();
+      });
+      block.appendChild(loadBtn);
+    }
+
+    resultsContainer.appendChild(block);
+  });
+
+  const summary = document.createElement('div'); summary.className='muted'; summary.style.marginTop='8px';
+  summary.textContent = `Generated approximately ${totalCount} tags (distributed across categories). Click Copy All to copy everything.`;
+  resultsContainer.appendChild(summary);
+}
+
+/* Generate button */
+generateBtn.addEventListener('click', ()=> {
+  const seed = sanitizeInput(seedInput.value || '');
+  const count = Math.min(10000, Math.max(1, parseInt(countInput.value || '100',10)));
+  const cat = categorySelect.value || 'all';
+  if(!seed){ alert('Type seed words first.'); seedInput.focus(); return; }
+  // immediate UX feedback
+  generateBtn.disabled = true; generateBtn.textContent = 'Generating...';
+  setTimeout(()=> {
+    renderResults(seed, count, cat, 50);
+    generateBtn.disabled = false; generateBtn.textContent = 'Generate';
+  }, 30);
+});
+
+/* Copy all / download */
+copyAllBtn.addEventListener('click', async ()=> {
+  const seed = sanitizeInput(seedInput.value || '');
+  if(!seed){ alert('Type seed words first.'); return; }
+  // collect visible tags
+  const tags = Array.from(document.querySelectorAll('.tag-text')).map(n => n.textContent).filter(Boolean);
+  if(tags.length === 0){ alert('Nothing to copy — generate first'); return; }
+  try{ await copyText(tags.join('\n')); showToast('All copied'); } catch(e){ alert('Copy failed'); }
+});
+downloadBtn.addEventListener('click', ()=> {
+  const seed = sanitizeInput(seedInput.value || '');
+  if(!seed){ alert('Type seed words first.'); return; }
+  const tags = Array.from(document.querySelectorAll('.tag-text')).map(n => n.textContent).filter(Boolean);
+  if(tags.length === 0){ alert('Nothing to download — generate first'); return; }
+  downloadText('pirateruler-hashtags.txt', tags.join('\n'));
+});
+
+/* sanitize user input but keep words */
+function sanitizeInput(v){ return v.replace(/[^\w\s\-]/g,'').trim(); }
+
+/* Theme & sidebar behavior (copied from template) */
+const themeBtn = $('themeBtn'), themeList = document.getElementById('themeList'), themeSelectWrap = $('themeSelectWrap');
+const themeItems = document.querySelectorAll('.theme-item');
+function applyTheme(name){
+  ['dark','ocean','sunset'].forEach(c => document.documentElement.classList.remove(c));
+  if(name !== 'light') document.documentElement.classList.add(name);
+  themeBtn.textContent = (name.charAt(0).toUpperCase()+name.slice(1));
+  localStorage.setItem('pr-theme', name);
+}
+(function initTheme(){ const t = localStorage.getItem('pr-theme') || 'ocean'; applyTheme(t); })();
+themeBtn.addEventListener('click', ()=> { themeList.classList.toggle('open'); themeList.setAttribute('aria-hidden', String(!themeList.classList.contains('open'))); });
+themeList.addEventListener('click', e => { const t = e.target.closest('.theme-item'); if(!t) return; applyTheme(t.dataset.theme); themeList.classList.remove('open'); themeList.setAttribute('aria-hidden','true'); });
+document.addEventListener('click', (e)=> { if(!themeSelectWrap.contains(e.target)) themeList.classList.remove('open'); });
+
+/* Sidebar */
+const sidebar = $('sidebar'), hambBtn = $('hambBtn'), closeSidebar = $('closeSidebar');
+function openSidebar(){ sidebar.classList.add('open'); sidebar.setAttribute('aria-hidden','false'); closeSidebar.focus(); }
+function closeSB(){ sidebar.classList.remove('open'); sidebar.setAttribute('aria-hidden','true'); }
+hambBtn.addEventListener('click', openSidebar); closeSidebar.addEventListener('click', closeSB);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSB(); });
+
+/* init example */
+renderResults(seedInput.value || 'PirateRuler', parseInt(countInput.value||100,10), 'all', 50);
+
+/* small helpful keyboard bindings */
+document.addEventListener('keydown', (e)=> {
+  if(e.key === 'Enter' && document.activeElement === seedInput) generateBtn.click();
+});
+
+/* accessibility: prevent accidental selection when clicking outside */
+document.addEventListener('click', (e)=> {
+  if(!themeSelectWrap.contains(e.target)) themeList.classList.remove('open');
+});
+</script>
+</body>
+</html>
